@@ -1,0 +1,308 @@
+homeassistant:
+  # Name of the location where Home Assistant is running
+  name: !secret p_name
+  # Location required to calculate the time the sun rises and sets
+  latitude: !secret latitude
+  longitude: !secret longitude
+  # Impacts weather/sunrise data (altitude above sea level in meters)
+  elevation: !secret elevation
+  # metric for Metric, imperial for Imperial
+  unit_system: metric
+  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: !secret time_zone
+  # Customization file
+  customize: !include customize.yaml
+  #customize: !include_dir_merge_named customizations
+#  
+http:
+  # Secrets are defined in the file secrets.yaml
+  api_password: !secret http_password
+  #server_port: 8123
+  #Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+  #base_url: smart63.duckdns.org:8123
+#
+config:
+# Enables a map showing the location of tracked devices
+map:
+#
+# Checks for available updates
+updater:
+  reporting: no
+  include_used_components: false
+#
+discovery:
+
+# Example configuration.yaml entry
+duckdns:
+  domain: !secret domain
+  access_token: !secret access_token
+#
+
+#  Example configuration.yaml entry
+ios:
+  push:
+    categories:
+      - name: Riyad AC ON
+        identifier: 'riyadacon'
+        actions:
+          - identifier: "ACON"
+            title: 'Switch AC OFF'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: yes
+            behavior: 'default'
+      - name: Riyad AC OFF
+        identifier: 'riyadacoff'
+        actions:
+          - identifier: 'ACOFF'
+            title: 'Switch AC Off'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: yes
+#            behavior: 'textInput'
+#            textInputButtonTitle: 'Switch AC On'
+#            textInputPlaceholder: 'Placeholder'            
+#  
+mqtt:
+  broker: !secret Mqtt-host
+  port: !secret Mqtt-port
+  #client_id: home-assistant
+  #username: !secret Mqtt-user
+  #password: !secret Mqtt-pass
+  keepalive: 60
+  discovery: true
+  #certificate: C:\Program Files\mosquitto\certs\smart63.crt
+#
+#  broker: CLOUTMQTT_SERVER
+#  port: CLOUDMQTT_PORT
+#  username: CLOUDMQTT_USER
+#  password: CLOUDMQTT_PASSWORD   
+#
+# Enables the frontend
+frontend:
+ # extra_html_url:
+  #  - /local/custom_ui/state-card-floorplan.html
+#
+
+panel_iframe:
+  nodered:
+    title: Node-Red
+    icon: mdi:shuffle-variant
+#    url: http://localhost:1880/
+    url: http://192.168.1.101:1880/
+  nodered_ui:
+    title: 'Node-RED Dashboard'
+    url: 'http://localhost:1880/ui'
+    icon: mdi:nodejs
+  configurator:
+    title: Configurator
+    icon: mdi:wrench
+    url: http://192.168.1.105:3218/
+#
+
+
+input_number:
+  bedroom_brightness:
+    name: Brightness
+    initial: 125
+    min: 0
+    max: 254
+    step: 1
+    icon: mdi:target
+
+input_select:
+  scene_rey:
+    name: Scene
+    options:
+      - Sea
+      - Night
+      - Red
+      - Spring blossom
+    initial: 'Sea'
+    icon: mdi:brightness-auto
+    
+  lights_on:
+    name: Lights
+    options:
+      - Rey-s1
+      - Rey-s2
+      - Rey-s3
+      - All-Off
+    initial: Rey-s1
+    icon: mdi:lightbulb-on-outline
+#
+#
+#device_tracker:
+ # - platform: automatic
+ #   client_id: 1234567
+  #  secret: 0987654321
+   # devices:
+    #  - 2007 Honda Element
+     # - 2004 Subaru Impreza
+
+#
+sun:  
+#  hide_entity: true
+ 
+automation: !include packages/automations/automations.yaml
+switch: !include packages/switches/switches.yaml
+group: !include packages/groups.yaml
+script: !include scripts.yaml
+#device_tracker: !include packages/device_tracker.yaml
+zone: !include packages/zones/zones.yaml
+#media_player: !include packages\media_player.yaml
+
+
+sensor:
+#  - platform: mqtt
+#    name: "Temperature1"
+#    state_topic: "sensor/temp1"
+#    qos: 0
+#    unit_of_measurement: "°C"
+#    value_template: "{{ (((states('sensor.temperature1')) * 9 / 5 )  +  32) | float | round(1) }}"
+#    value_template: '{{ value | float-7 | round(1) }}'
+    
+  - platform: mqtt
+    sensor: DHT11
+    state_topic: 'tele/Rey-nodemcu/SENSOR'
+    name: 'Temperature'
+    unit_of_measurement: '°C'
+    value_template: '{{ value_json.DHT11.Temperature }}'
+#
+  - platform: mqtt
+    state_topic: 'tele/Rey-nodemcu/SENSOR'
+    name: 'Humidity'
+    unit_of_measurement: '%'
+    value_template: '{{ value_json.DHT11.Humidity }}'
+    hidden: true
+
+
+  - platform: moon    
+  - platform: template
+    sensors:
+      moonphases:
+        friendly_name: "Moon"
+        value_template: "{{ states.sensor.moon.state }}"
+        entity_picture_template: >-
+          {% if is_state('sensor.moon', 'New moon') %}
+            /local/MoonPhases/NewMoon.jpg
+          {% elif is_state('sensor.moon', 'Waxing crescent') %}
+            /local/MoonPhases/WaxingCrescent.jpg
+          {% elif is_state('sensor.moonp', 'First quarter') %}
+            /local/MoonPhases/FirstQuarter.jpg
+          {% elif is_state('sensor.moon', 'Waxing gibbous') %}
+            /local/MoonPhases/WaxingGibbous.jpg
+          {% elif is_state('sensor.moon', 'Full moon') %}
+            /local/MoonPhases/FullMoon.jpg
+          {% elif is_state('sensor.moon', 'Waning gibbous') %}
+            /local/MoonPhases/WaningGibbous.jpg
+          {% elif is_state('sensor.moon', 'Last quarter') %}
+            /local/MoonPhases/LastQuarter.jpg
+          {% elif is_state('sensor.moon', 'Waning crescent') %}
+            /local/MoonPhases/WaningCrescent.jpg
+          {% endif %}
+#
+#
+      sun_state:
+        friendly_name: "Sun State"
+        value_template: >-
+          {% if is_state('sun.sun', 'above_horizon') %}
+            Up
+          {% else %}
+            Down
+          {% endif %}
+ #   
+#mdi:weather-night
+#mdi:weather-sunny
+       
+      day_night:
+        friendly_name: "Day/Night"
+        value_template: >-
+          {% if is_state('sun.sun', 'above_horizon') %}
+            Day
+          {% else %}
+            Night
+          {% endif %}
+        entity_picture_template: >-
+          {% if is_state('sun.sun', 'above_horizon') %}
+            /local/DayNight/daytime.png
+          {% else %}
+            /local/DayNight/nighttime.png
+          {% endif %}
+#          
+      solar_angle:
+        friendly_name: "Sun Angle"
+        unit_of_measurement: '°'
+        value_template: "{{ '%+.1f'|format(states.sun.sun.attributes.elevation) }}"
+#      sunrise:
+#        value_template: "{{ states.sun.sun.attributes.next_rising }}"
+
+  - platform: history_stats
+    name: Lights ON today
+    entity_id: switch.sonoff_exp_switch
+    state: 'on'
+    type: time
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+#    duration: # 24:00:00
+#      hours: 24
+#      minutes: 0
+#      seconds: 0
+#
+  - platform: history_stats
+    name: AC ON today
+    entity_id: switch.riyad_ac
+    state: 'on'
+    type: time
+    start: '{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}'
+    end: '{{ now() }}'
+#    duration: # 24:00:00
+#      hours: 24
+#      minutes: 0
+#      seconds: 0
+  
+#
+#  - platform: yr
+#--------------------------------------------------- 
+#
+binary_sensor:
+  - platform: mqtt
+    state_topic: "cmnd/Motion_Pir/POWER"
+    name: "Motion PIR"
+#----------------------------------------------------
+climate:
+  - platform: generic_thermostat
+    name: Study
+    heater: switch.power_strip
+    ac_mode: true
+    min_temp: 18
+    max_temp: 24
+    target_temp: 22
+    target_sensor: sensor.DHT11
+    #---------------------------------------------------       
+#--------------------------------------------------- 
+
+#sensor 1:
+#  platform: mqtt
+#  state_topic: 'office/sensor1'
+#  name: 'Temperature1'
+#  unit_of_measurement: '°C'
+#  value_template: '{{ value_json.temperature }}'
+
+#sensor 2:
+#  platform: mqtt
+#  state_topic: 'office/sensor1'
+#  name: 'Humidity1'
+#  unit_of_measurement: '%'
+#  value_template: '{{ value_json.humidity }}'
+
+input_boolean:
+  sunhome:
+    name: Away or Home
+    initial: on
+    icon: mdi:account-multiple-outline
+  motion_detected:
+    name: Motion Detected
+    initial: on
+#
+

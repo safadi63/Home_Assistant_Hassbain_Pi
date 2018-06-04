@@ -1,0 +1,9 @@
+
+mqtt_button:
+  sequence:
+    service: mqtt.publish
+    data:
+      topic: "cmnd/Rey-s2/POWER"
+#      topic: "stat/Rey-s2/POWER"
+      payload: "ON"
+

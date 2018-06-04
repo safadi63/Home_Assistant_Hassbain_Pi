@@ -1,0 +1,9 @@
+binary_sensor.motion_pir:
+   device_class: motion
+
+sensor.moonphases:
+  templates:
+    hidden: "return (entities['sun.sun'].state == 'above_horizon');"
+
+sensor.sun:
+  hidden: true
